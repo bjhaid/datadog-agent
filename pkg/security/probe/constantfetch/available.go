@@ -10,7 +10,7 @@ import (
 )
 
 // GetAvailableConstantFetchers returns available constant fetchers
-func GetAvailableConstantFetchers(config *config.Config, kv *kernel.Version, statsdClient *statsd.Client) []ConstantFetcher {
+func GetAvailableConstantFetchers(config *config.Config, kv *kernel.Version, statsdClient statsd.ClientInterface) []ConstantFetcher {
 	fallbackConstantFetcher := NewFallbackConstantFetcher(kv)
 
 	if config.EnableRuntimeCompiledConstants {

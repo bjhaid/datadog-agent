@@ -51,7 +51,7 @@ type Probe struct {
 	manager        *manager.Manager
 	managerOptions manager.Options
 	config         *config.Config
-	statsdClient   *statsd.Client
+	statsdClient   statsd.ClientInterface
 	startTime      time.Time
 	kernelVersion  *kernel.Version
 	_              uint32 // padding for goarch=386
@@ -122,7 +122,7 @@ func (p *Probe) VerifyOSVersion() error {
 }
 
 // Init initializes the probe
-func (p *Probe) Init(client *statsd.Client) error {
+func (p *Probe) Init() error {
 	p.startTime = time.Now()
 
 	var err error
@@ -209,7 +209,7 @@ func (p *Probe) Init(client *statsd.Client) error {
 		return err
 	}
 
-	p.monitor, err = NewMonitor(p, client)
+	p.monitor, err = NewMonitor(p)
 	if err != nil {
 		return err
 	}
@@ -227,6 +227,11 @@ func (p *Probe) Start() error {
 	}
 
 	return p.monitor.Start(p.ctx, &p.wg)
+}
+
+// SetStatsdClient set the Statsd client
+func (p *Probe) SetStatsdClient(client statsd.ClientInterface) {
+	p.statsdClient = client
 }
 
 // SetEventHandler set the probe event handler
@@ -876,7 +881,7 @@ func (p *Probe) NewRuleSet(opts *rules.Opts) *rules.RuleSet {
 }
 
 // NewProbe instantiates a new runtime security agent probe
-func NewProbe(config *config.Config, client *statsd.Client) (*Probe, error) {
+func NewProbe(config *config.Config) (*Probe, error) {
 	erpc, err := NewERPC()
 	if err != nil {
 		return nil, err
@@ -891,7 +896,6 @@ func NewProbe(config *config.Config, client *statsd.Client) (*Probe, error) {
 		managerOptions: ebpf.NewDefaultOptions(),
 		ctx:            ctx,
 		cancelFnc:      cancel,
-		statsdClient:   client,
 		erpc:           erpc,
 	}
 
